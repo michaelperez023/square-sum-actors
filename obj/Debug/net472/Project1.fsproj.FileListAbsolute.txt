@@ -1,0 +1,4 @@
+C:\Users\Michael Perez\Desktop\Distributed OS\Project1\obj\Debug\net472\Project1.fsproj.AssemblyReference.cache
+C:\Users\Michael Perez\Desktop\Distributed OS\Project1\obj\Debug\net472\Project1.AssemblyInfoInputs.cache
+C:\Users\Michael Perez\Desktop\Distributed OS\Project1\obj\Debug\net472\Project1.AssemblyInfo.fs
+C:\Users\Michael Perez\Desktop\Distributed OS\Project1\obj\Debug\net472\Project1.exe.config
