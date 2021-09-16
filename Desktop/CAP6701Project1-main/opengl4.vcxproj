@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="example2.cpp" />
+    <ClCompile Include="Project1.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fragmentshader.glsl" />

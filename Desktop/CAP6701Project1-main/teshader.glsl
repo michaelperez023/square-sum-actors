@@ -2,30 +2,43 @@
 
 layout(isolines) in;
 
+in vec4 tcColor[];
+out vec4 teColor[];
+
 uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
+uniform float Knots[8];
+
+#define ID gl_InvocationID
 
 void main() {
     // The tessellation u coordinate
     float u = gl_TessCoord.x;
 
-    // The patch vertices (control points)
-    vec3 p0 = gl_in[0].gl_Position.xyz;
-    vec3 p1 = gl_in[1].gl_Position.xyz;
-    vec3 p2 = gl_in[2].gl_Position.xyz;
-    vec3 p3 = gl_in[3].gl_Position.xyz;
-    float u1 = (1.0 - u);
-    float u2 = u * u;
+    //teColor[gl_InvocationID] = tcColor[gl_InvocationID];
 
-    // Bernstein polynomials evaluated at u
-    float b3 = u2 * u;
-    float b2 = 3.0 * u2 * u1;
-    float b1 = 3.0 * u * u1 * u1;
-    float b0 = u1 * u1 * u1;
+    // deboor approach
+    const int deg = 3;
+    const int order = deg + 1;
+    vec3 cps[order];
+    for (int i = 0; i < order; i++) {
+        cps[i] = gl_in[i].gl_Position.xyz;
+    }
 
-    // Cubic Bezier interpolation
-    vec3 tePosition = p0 * b0 + p1 * b1 + p2 * b2 + p3 * b3;
+    // We only evaluate u between knot 4 and 5
+    const int leftKnot = 4;
+
+    for (int level = deg - 1; level >= 0; level--) {
+        for (int i = 0; i <= level; i++) {
+            float knot_lo = Knots[leftKnot + i - (level + 1)];
+            float knot_hi = Knots[leftKnot + i];
+            float alpha = (leftKnot + u - knot_lo) / (knot_hi - knot_lo);
+            cps[i] = (1 - alpha) * cps[i] + alpha * cps[i + 1];
+        }
+    }
+
+    vec3 tePosition = cps[0];
 
     gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(tePosition, 1.0f);
 }

@@ -1,7 +1,9 @@
 #version 400
 
-layout(location = 0) out vec4 Color;
+out vec3 Color;
+in vec4 teColor;
 
 void main() {
-	Color = vec4(1.0, 1.0, 1.0, 1.0);
+	//Color = vec3(teColor.rgb);
+	Color = vec3(0.0, 1.0, 0.0);
 }

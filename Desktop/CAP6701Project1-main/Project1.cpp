@@ -29,7 +29,10 @@ int CurrentWidth = 600, CurrentHeight = 600, WindowHandle = 0;
 
 unsigned FrameCount = 0;
 
-float TessLevelOuter = 5.0f;
+float TessLevelOuter = 30.0f;
+
+// A deg 3 patch which needs k = deg + num_cpts + 1 = 8 knots
+float Knots[8] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f };
 
 glm::mat4 ModelMatrix;
 glm::mat4 ViewMatrix;
@@ -37,7 +40,7 @@ glm::mat4 ProjectionMatrix;
 
 GLuint VertexShaderId, FragmentShaderId, TessControlShaderId, TessEvalShaderId, ProgramId, VaoId, BufferId, IndexBufferId;
 
-GLuint TessLevelOuterLocation;
+GLuint TessLevelOuterLocation, KnotsLocation;
 
 GLuint ModelMatrixLocation, ViewMatrixLocation, ProjectionMatrixLocation;
 
@@ -129,14 +132,7 @@ void Initialize(int argc, char* argv[]) {
 void KeyboardFunction(unsigned char Key, int X, int Y) {
 	X; Y; // Resolves warning C4100: unreferenced formal parameter
 
-	switch (Key)
-	{
-    case 'w':
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-        break;
-    case 'f':
-        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ); 
-        break;
+	switch (Key) {
 	case '1':
 		TessLevelOuter++;
 		break;
@@ -161,6 +157,9 @@ void RenderFunction(void) {
 	
 	// update tessellation level
 	glUniform1f(TessLevelOuterLocation, TessLevelOuter);
+
+	// update knots
+	glUniform1fv(KnotsLocation, 8, Knots);
 
 	// update Matrix
 	glUniformMatrix4fv(ModelMatrixLocation, 1, GL_FALSE, &(ModelMatrix[0][0]));
@@ -197,12 +196,12 @@ void Cleanup(void) {
 
 void CreateVBO(void) {
 	Vertex ControlPoints[] = {
-		{ { 1.0f, -0.2f, 1.4f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } }, // 0
-		{ { -0.6732f, 0.766f, -0.4f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } }, // 1
-		{ { -0.6732f, -0.766f, 1.4f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } }, // 2
-		{ { 1.0f, 0.2f, -0.4f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } }, // 3
-		{ { -0.3268f, 0.966f, 1.4f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } }, // 4
-		{ { -0.3268f, -0.966f, -0.4f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } } // 5
+		{ { 1.0f, -0.2f, 1.4f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }, // 0
+		{ { -0.6732f, 0.766f, -0.4f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }, // 1
+		{ { -0.6732f, -0.766f, 1.4f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }, // 2
+		{ { 1.0f, 0.2f, -0.4f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }, // 3
+		{ { -0.3268f, 0.966f, 1.4f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }, // 4
+		{ { -0.3268f, -0.966f, -0.4f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } // 5
 	};
 
 	GLubyte Indices[] = {
@@ -339,6 +338,8 @@ void CreateShaders(void) {
 	glUseProgram(ProgramId);
 
 	TessLevelOuterLocation = glGetUniformLocation(ProgramId, "TessLevelOuter");
+
+	KnotsLocation = glGetUniformLocation(ProgramId, "Knots");
 
 	ModelMatrixLocation = glGetUniformLocation(ProgramId, "ModelMatrix");
 	ViewMatrixLocation = glGetUniformLocation(ProgramId, "ViewMatrix");
