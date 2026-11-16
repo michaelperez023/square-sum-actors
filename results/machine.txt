@@ -1,0 +1,7 @@
+os: Ubuntu 24.04.5 LTS (Linux 6.8.0-149-generic)
+cpu: AMD Ryzen Threadripper 1920X 12-Core Processor
+logical processors: 24
+memory: 31 GiB
+.NET SDK: 10.0.404
+Akka.FSharp: 1.5.74
+runtime settings: default
