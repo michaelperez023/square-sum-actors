@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Expected outputs agree with scripts/reference.py
+        run: |
+          for expected in tests/expected/*.txt; do
+            name=$(basename "$expected" .txt)
+            echo "N = ${name%_*}, k = ${name#*_}"
+            timeout 300 python3 scripts/reference.py "${name%_*}" "${name#*_}" > "$RUNNER_TEMP/reference.txt"
+            diff "$expected" "$RUNNER_TEMP/reference.txt"
+          done
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Known answers (tests/expected/<N>_<k>.txt)
+        run: |
+          for expected in tests/expected/*.txt; do
+            name=$(basename "$expected" .txt)
+            n=${name%_*}
+            k=${name#*_}
+            echo "N = $n, k = $k"
+            timeout 300 dotnet fsi SquareSums.fsx "$n" "$k" --verify --stats > "$RUNNER_TEMP/actual.txt"
+            diff "$expected" "$RUNNER_TEMP/actual.txt"
+          done
+
+      - name: Same output with other worker counts and unit sizes
+        run: |
+          for options in "--workers 1 --unit 1000000" "--workers 3 --unit 777" "--workers 16 --unit 1"; do
+            echo "1000000 24 $options"
+            timeout 300 dotnet fsi SquareSums.fsx 1000000 24 $options --stats > "$RUNNER_TEMP/actual.txt"
+            diff tests/expected/1000000_24.txt "$RUNNER_TEMP/actual.txt"
+          done
+
+      - name: Bad arguments exit with code 2 and print nothing on stdout
+        run: |
+          for args in "" "1000000" "0 24" "1000000 x" "1000000 24 --workers 0" "1000000 24 --unit" "1000000 24 --fast" "4000000000000000000 24"; do
+            code=0
+            timeout 120 dotnet fsi SquareSums.fsx $args > "$RUNNER_TEMP/out.txt" 2> "$RUNNER_TEMP/err.txt" || code=$?
+            echo "[$args] exit $code: $(head -n 1 "$RUNNER_TEMP/err.txt")"
+            test "$code" -eq 2
+            test ! -s "$RUNNER_TEMP/out.txt"
+          done
